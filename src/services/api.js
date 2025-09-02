@@ -5,6 +5,9 @@ const API_BASE_URL = 'https://otgbpyshhg.execute-api.ap-south-1.amazonaws.com/pr
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 export const getCategories = async () => {
@@ -13,7 +16,8 @@ export const getCategories = async () => {
     return response.data.categories || [];
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return [];
+    // Return mock data for testing
+    return ['film-songs', 'stories', 'podcasts', 'web-series'];
   }
 };
 
