@@ -6,9 +6,10 @@ import './styles/App.css';
 
 const App = () => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [content, setContent] = useState([]);
-  const [currentView, setCurrentView] = useState('categories'); // categories, movies, songs, genres, shows, seasons, episodes
+  const [filteredContent, setFilteredContent] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [currentView, setCurrentView] = useState('categories');
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [currentTrack, setCurrentTrack] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,90 +23,149 @@ const App = () => {
     setCategories(categoriesData);
   };
 
-  const handleCategoryClick = async (category) => {
+  const loadCategoryContent = async (category) => {
     setLoading(true);
     const contentData = await getCategoryContent(category);
     setContent(contentData);
     setSelectedCategory(category);
-    
-    if (category === 'film-songs') {
-      setCurrentView('movies');
-      setBreadcrumb([{name: 'Film Songs', type: 'category'}]);
-    } else if (category === 'stories') {
-      setCurrentView('genres');
-      setBreadcrumb([{name: 'Stories', type: 'category'}]);
-    } else {
-      setCurrentView('shows');
-      setBreadcrumb([{name: category.replace('-', ' ').toUpperCase(), type: 'category'}]);
-    }
     setLoading(false);
+    return contentData;
   };
 
-  const handleMovieClick = (movie) => {
-    const movieSongs = content.filter(item => 
-      item.content_type === 'EPISODE' && item.movie_or_show === movie
-    );
-    setContent(movieSongs);
-    setCurrentView('songs');
-    setBreadcrumb([
-      {name: 'Film Songs', type: 'category'},
-      {name: movie, type: 'movie'}
-    ]);
+  // Go Back Function
+  const goBack = () => {
+    if (breadcrumb.length === 0) return;
+
+    const newBreadcrumb = [...breadcrumb];
+    newBreadcrumb.pop();
+    setBreadcrumb(newBreadcrumb);
+
+    if (newBreadcrumb.length === 0) {
+      setCurrentView('categories');
+    } else {
+      const lastCrumb = newBreadcrumb[newBreadcrumb.length - 1];
+      
+      if (lastCrumb.type === 'category') {
+        handleCategoryClick(lastCrumb.value);
+      } else if (lastCrumb.type === 'album') {
+        showAlbumSongs(lastCrumb.value);
+      } else if (lastCrumb.type === 'genre') {
+        showGenreShows(selectedCategory, lastCrumb.value);
+      } else if (lastCrumb.type === 'show') {
+        showShowSeasons(lastCrumb.value);
+      }
+    }
   };
 
-  const handleGenreClick = (genre) => {
-    const genreStories = content.filter(item => 
-      item.category === 'stories' && item.album_or_season?.includes(genre)
-    );
-    setContent(genreStories);
-    setCurrentView('shows');
-    setBreadcrumb([
-      {name: 'Stories', type: 'category'},
-      {name: genre, type: 'genre'}
-    ]);
+  // Category Click - Shows albums/genres/shows
+  const handleCategoryClick = async (category) => {
+    const contentData = await loadCategoryContent(category);
+    setBreadcrumb([{name: category.replace('-', ' ').toUpperCase(), type: 'category', value: category}]);
+
+    if (category === 'film-songs') {
+      // Show albums: hit-kannada-songs-vol1
+      const albums = [...new Set(contentData.map(item => item.album_or_season))];
+      setFilteredContent(albums.map(album => ({name: album, type: 'album'})));
+      setCurrentView('list');
+    } 
+    else if (category === 'stories') {
+      // Show genres: horror, thriller
+      const genres = [...new Set(contentData.map(item => {
+        const path = item.content_id.split('#');
+        return path[2]; // horror or thriller
+      }))];
+      setFilteredContent(genres.map(genre => ({name: genre, type: 'genre'})));
+      setCurrentView('list');
+    }
+    else if (category === 'podcasts') {
+      // Show seasons directly: season1
+      const seasons = [...new Set(contentData.map(item => item.album_or_season))];
+      setFilteredContent(seasons.map(season => ({name: season, type: 'season'})));
+      setCurrentView('list');
+    }
+    else if (category === 'web-series') {
+      // Show series: jackie1
+      const series = [...new Set(contentData.map(item => item.movie_or_show))];
+      setFilteredContent(series.map(show => ({name: show, type: 'show'})));
+      setCurrentView('list');
+    }
   };
 
-  const handleShowClick = (show) => {
-    const showSeasons = content.filter(item => 
-      item.movie_or_show === show
-    );
-    setContent(showSeasons);
-    setCurrentView('seasons');
-    setBreadcrumb([
-      ...breadcrumb,
-      {name: show, type: 'show'}
-    ]);
+  // Film Songs: Album → Movies → Songs
+  const showAlbumMovies = (album) => {
+    const movies = [...new Set(content.filter(item => 
+      item.album_or_season === album
+    ).map(item => item.movie_or_show))];
+    
+    setBreadcrumb([...breadcrumb, {name: album, type: 'album', value: album}]);
+    setFilteredContent(movies.map(movie => ({name: movie, type: 'movie'})));
+    setCurrentView('list');
   };
 
-  const handleSeasonClick = (season) => {
-    const seasonEpisodes = content.filter(item => 
-      item.album_or_season === season
+  const showAlbumSongs = (movie) => {
+    const songs = content.filter(item => 
+      item.movie_or_show === movie && item.content_type === 'EPISODE'
     );
-    setContent(seasonEpisodes);
+    
+    setBreadcrumb([...breadcrumb, {name: movie, type: 'movie', value: movie}]);
+    setFilteredContent(songs);
     setCurrentView('episodes');
-    setBreadcrumb([
-      ...breadcrumb,
-      {name: season, type: 'season'}
-    ]);
+  };
+
+  // Stories: Genre → Shows → Seasons → Episodes
+  const showGenreShows = (category, genre) => {
+    const shows = [...new Set(content.filter(item => {
+      const path = item.content_id.split('#');
+      return path[2] === genre; // horror or thriller
+    }).map(item => item.movie_or_show))];
+    
+    setBreadcrumb([...breadcrumb, {name: genre, type: 'genre', value: genre}]);
+    setFilteredContent(shows.map(show => ({name: show, type: 'show'})));
+    setCurrentView('list');
+  };
+
+  const showShowSeasons = (show) => {
+    const seasons = [...new Set(content.filter(item => 
+      item.movie_or_show === show
+    ).map(item => item.album_or_season))];
+    
+    setBreadcrumb([...breadcrumb, {name: show, type: 'show', value: show}]);
+    setFilteredContent(seasons.map(season => ({name: season, type: 'season'})));
+    setCurrentView('list');
+  };
+
+  const showSeasonEpisodes = (season) => {
+    const episodes = content.filter(item => 
+      item.album_or_season === season && item.content_type === 'EPISODE'
+    );
+    
+    setBreadcrumb([...breadcrumb, {name: season, type: 'season', value: season}]);
+    setFilteredContent(episodes);
+    setCurrentView('episodes');
+  };
+
+  // Handle clicks
+  const handleItemClick = (item) => {
+    if (item.type === 'album') {
+      showAlbumMovies(item.name);
+    } else if (item.type === 'movie') {
+      showAlbumSongs(item.name);
+    } else if (item.type === 'genre') {
+      showGenreShows(selectedCategory, item.name);
+    } else if (item.type === 'show') {
+      showShowSeasons(item.name);
+    } else if (item.type === 'season') {
+      showSeasonEpisodes(item.name);
+    }
   };
 
   const handlePlayContent = (contentItem) => {
     setCurrentTrack({
       url: contentItem.cloudfront_url,
       title: contentItem.title || contentItem.file_name,
-      artist: contentItem.singer || contentItem.movie_or_show
+      artist: contentItem.singer || contentItem.movie_or_show || 'PKRK FM',
+      contentItem
     });
-  };
-
-  const handleBreadcrumbClick = (index) => {
-    const newBreadcrumb = breadcrumb.slice(0, index + 1);
-    setBreadcrumb(newBreadcrumb);
-    
-    if (index === 0) {
-      setCurrentView('categories');
-      handleCategoryClick(selectedCategory);
-    }
-    // Add more breadcrumb logic as needed
   };
 
   const renderCategories = () => (
@@ -127,94 +187,19 @@ const App = () => {
     </div>
   );
 
-  const renderMovies = () => {
-    const movies = [...new Set(content.map(item => item.movie_or_show))];
-    return (
-      <div className="content-section">
-        <h2>Kannada Movies</h2>
-        <div className="content-grid">
-          {movies.map(movie => (
-            <div key={movie} className="content-card" onClick={() => handleMovieClick(movie)}>
-              <div className="card-image">🎬</div>
-              <h3>{movie}</h3>
-              <p>Click to view songs</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderGenres = () => (
+  const renderList = () => (
     <div className="content-section">
-      <h2>Story Genres</h2>
       <div className="content-grid">
-        <div className="content-card" onClick={() => handleGenreClick('horror')}>
-          <div className="card-image">👻</div>
-          <h3>Horror</h3>
-          <p>Scary stories</p>
-        </div>
-        <div className="content-card" onClick={() => handleGenreClick('thriller')}>
-          <div className="card-image">🔪</div>
-          <h3>Thriller</h3>
-          <p>Suspense stories</p>
-        </div>
-        <div className="content-card" onClick={() => handleGenreClick('drama')}>
-          <div className="card-image">🎭</div>
-          <h3>Drama</h3>
-          <p>Emotional stories</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderShows = () => {
-    const shows = [...new Set(content.map(item => item.movie_or_show))];
-    return (
-      <div className="content-section">
-        <h2>Shows</h2>
-        <div className="content-grid">
-          {shows.map(show => (
-            <div key={show} className="content-card" onClick={() => handleShowClick(show)}>
-              <div className="card-image">📺</div>
-              <h3>{show}</h3>
-              <p>Click to view seasons</p>
+        {filteredContent.map((item, index) => (
+          <div key={index} className="content-card" onClick={() => handleItemClick(item)}>
+            <div className="card-image">
+              {item.type === 'album' && '💿'}
+              {item.type === 'movie' && '🎬'}
+              {item.type === 'genre' && '📖'}
+              {item.type === 'show' && '📺'}
+              {item.type === 'season' && '📅'}
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderSeasons = () => {
-    const seasons = [...new Set(content.map(item => item.album_or_season))];
-    return (
-      <div className="content-section">
-        <h2>Seasons</h2>
-        <div className="content-grid">
-          {seasons.map(season => (
-            <div key={season} className="content-card" onClick={() => handleSeasonClick(season)}>
-              <div className="card-image">📅</div>
-              <h3>{season}</h3>
-              <p>Click to view episodes</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderSongs = () => (
-    <div className="content-section">
-      <h2>Songs</h2>
-      <div className="songs-list">
-        {content.map(song => (
-          <div key={song.content_id} className="song-item" onClick={() => handlePlayContent(song)}>
-            <div className="song-info">
-              <h4>{song.title || song.file_name}</h4>
-              <p>Singer: {song.singer || 'Unknown'}</p>
-            </div>
-            <button className="play-btn">▶️</button>
+            <h3>{item.name}</h3>
           </div>
         ))}
       </div>
@@ -223,14 +208,13 @@ const App = () => {
 
   const renderEpisodes = () => (
     <div className="content-section">
-      <h2>Episodes</h2>
-      <div className="songs-list">
-        {content.map((episode, index) => (
-          <div key={episode.content_id} className="song-item" onClick={() => handlePlayContent(episode)}>
+      <div className="episodes-list">
+        {filteredContent.map((episode, index) => (
+          <div key={episode.content_id} className="episode-item" onClick={() => handlePlayContent(episode)}>
             <div className="episode-number">#{index + 1}</div>
-            <div className="song-info">
+            <div className="episode-info">
               <h4>{episode.title || episode.file_name}</h4>
-              <p>Duration: 30 min</p>
+              <p>{episode.singer ? `Singer: ${episode.singer}` : 'Episode'}</p>
             </div>
             <button className="play-btn">▶️</button>
           </div>
@@ -244,15 +228,13 @@ const App = () => {
       <Header />
       
       <main className="main-content">
-        {/* Breadcrumb Navigation */}
+        {/* Breadcrumb with Go Back Button */}
         {breadcrumb.length > 0 && (
           <div className="breadcrumb">
-            <span onClick={() => {setCurrentView('categories'); setBreadcrumb([]);}}>Home</span>
+            <button className="go-back-btn" onClick={goBack}>← Go Back</button>
+            <span>Home</span>
             {breadcrumb.map((crumb, index) => (
-              <span key={index}>
-                {' > '}
-                <span onClick={() => handleBreadcrumbClick(index)}>{crumb.name}</span>
-              </span>
+              <span key={index}> > {crumb.name}</span>
             ))}
           </div>
         )}
@@ -261,11 +243,7 @@ const App = () => {
           {loading && <div className="loading">Loading...</div>}
           
           {currentView === 'categories' && renderCategories()}
-          {currentView === 'movies' && renderMovies()}
-          {currentView === 'genres' && renderGenres()}
-          {currentView === 'shows' && renderShows()}
-          {currentView === 'seasons' && renderSeasons()}
-          {currentView === 'songs' && renderSongs()}
+          {currentView === 'list' && renderList()}
           {currentView === 'episodes' && renderEpisodes()}
         </div>
       </main>

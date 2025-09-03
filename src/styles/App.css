@@ -420,3 +420,106 @@ p {
     margin-top: 10px;
   }
 }
+.go-back-btn {
+  background: #e74c3c;
+  border: none;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-right: 15px;
+}
+
+.go-back-btn:hover {
+  background: #c0392b;
+}
+
+.breadcrumb {
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.episode-item {
+  background: #2a2a2a;
+  padding: 15px 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.episode-item:hover {
+  background: #3a3a3a;
+}
+
+.episode-number {
+  width: 40px;
+  height: 40px;
+  background: #e74c3c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-weight: bold;
+  color: white;
+}
+
+.episode-info {
+  flex: 1;
+  text-align: left;
+}
+
+.episode-info h4 {
+  margin: 0 0 5px 0;
+  color: white;
+}
+
+.episode-info p {
+  margin: 0;
+  color: #ccc;
+  font-size: 14px;
+}
+
+.now-playing {
+  min-width: 150px;
+}
+
+.playing-indicator {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.close-btn {
+  background: #666;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.close-btn:hover {
+  background: #888;
+}
