@@ -210,3 +210,18 @@ body {
     width: 100%;
   }
 }
+.error-message {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.play-pause-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+.info-message {
+  color: #4CAF50;
+  font-size: 12px;
+  margin-top: 5px;
+}
