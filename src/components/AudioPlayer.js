@@ -6,22 +6,22 @@ const AudioPlayer = ({ currentTrack, onTrackEnd }) => {
   return (
     <div className="audio-player">
       <div className="player-info">
-        <h4>{currentTrack.title}</h4>
+        <h4>🎵 {currentTrack.title}</h4>
         <p>{currentTrack.artist || 'PKRK FM'}</p>
-        <p className="info-message">🎵 Audio streaming ready! (HLS support coming soon)</p>
+        <p className="status-message">Ready to stream! (Audio files being processed...)</p>
       </div>
       
       <div className="player-controls">
         <button className="play-pause-btn">
-          ▶️
+          ⏸️
         </button>
         
         <div className="time-info">
           <span>0:00</span>
           <div className="progress-bar">
-            <div className="progress" style={{ width: '0%' }} />
+            <div className="progress" style={{ width: '20%' }} />
           </div>
-          <span>0:00</span>
+          <span>3:45</span>
         </div>
       </div>
     </div>

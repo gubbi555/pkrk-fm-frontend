@@ -1,49 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import HeroCarousel from './components/HeroCarousel';
-import ContentCard from './components/ContentCard';
+import ContentGrid from './components/ContentGrid';
 import AudioPlayer from './components/AudioPlayer';
-import { getCategories, getCategoryContent, getPlaybackUrl } from './services/api';
+import { getCategories, getCategoryContent } from './services/api';
 import './styles/App.css';
 
 const App = () => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('film-songs');
+  const [currentCategory, setCurrentCategory] = useState('');
   const [content, setContent] = useState([]);
-  const [featuredContent, setFeaturedContent] = useState([]);
+  const [navigationPath, setNavigationPath] = useState([]);
+  const [currentLevel, setCurrentLevel] = useState('categories'); // categories, movies, songs, genres, shows, seasons, episodes
   const [currentTrack, setCurrentTrack] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadInitialData();
+    loadCategories();
   }, []);
 
-  const loadInitialData = async () => {
+  const loadCategories = async () => {
     try {
       setLoading(true);
       const categoriesData = await getCategories();
       setCategories(categoriesData);
-      
-      if (categoriesData.length > 0) {
-        loadCategoryContent(categoriesData[0]);
-      }
+      setCurrentLevel('categories');
+      setNavigationPath([]);
     } catch (error) {
-      console.error('Error loading initial data:', error);
+      console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadCategoryContent = async (category) => {
+  const handleCategoryClick = async (category) => {
     try {
       setLoading(true);
       const contentData = await getCategoryContent(category);
       setContent(contentData);
-      setSelectedCategory(category);
+      setCurrentCategory(category);
+      setNavigationPath([{ type: 'category', value: category, label: category.toUpperCase() }]);
       
-      // Set featured content (first 3 episodes)
-      const episodes = contentData.filter(item => item.content_type === 'EPISODE');
-      setFeaturedContent(episodes.slice(0, 3));
+      if (category === 'film-songs') {
+        setCurrentLevel('movies');
+      } else if (category === 'stories') {
+        setCurrentLevel('genres');
+      } else {
+        setCurrentLevel('content');
+      }
     } catch (error) {
       console.error('Error loading category content:', error);
     } finally {
@@ -51,94 +54,245 @@ const App = () => {
     }
   };
 
-  const handlePlayContent = async (contentItem) => {
-    try {
-      if (contentItem.cloudfront_url) {
-        setCurrentTrack({
-          url: contentItem.cloudfront_url,
-          title: contentItem.title || contentItem.file_name,
-          artist: contentItem.singer || contentItem.movie_or_show,
-          contentItem
-        });
-      } else {
-        const playbackData = await getPlaybackUrl(contentItem.content_id);
-        setCurrentTrack({
-          url: playbackData.playback_url,
-          title: contentItem.title || contentItem.file_name,
-          artist: contentItem.singer || contentItem.movie_or_show,
-          contentItem
-        });
+  const handleMovieClick = (movie) => {
+    const movieSongs = content.filter(item => 
+      item.content_type === 'EPISODE' && item.movie_or_show === movie
+    );
+    setContent(movieSongs);
+    setCurrentLevel('songs');
+    setNavigationPath([
+      ...navigationPath, 
+      { type: 'movie', value: movie, label: movie }
+    ]);
+  };
+
+  const handleGenreClick = (genre) => {
+    // For stories, show available shows in that genre
+    const genreShows = content.filter(item => 
+      item.content_type === 'EPISODE' && 
+      item.album_or_season?.toLowerCase().includes(genre.toLowerCase())
+    );
+    
+    const uniqueShows = [...new Set(genreShows.map(item => item.movie_or_show))];
+    setContent(uniqueShows.map(show => ({ 
+      movie_or_show: show, 
+      content_type: 'SHOW',
+      category: currentCategory 
+    })));
+    setCurrentLevel('shows');
+    setNavigationPath([
+      ...navigationPath, 
+      { type: 'genre', value: genre, label: genre }
+    ]);
+  };
+
+  const handleShowClick = (showName) => {
+    const showEpisodes = content.filter(item => 
+      item.movie_or_show === showName
+    );
+    
+    const seasons = [...new Set(showEpisodes.map(item => item.album_or_season))];
+    setContent(seasons.map(season => ({ 
+      album_or_season: season, 
+      content_type: 'SEASON',
+      movie_or_show: showName,
+      category: currentCategory 
+    })));
+    setCurrentLevel('seasons');
+    setNavigationPath([
+      ...navigationPath, 
+      { type: 'show', value: showName, label: showName }
+    ]);
+  };
+
+  const handleSeasonClick = async (season) => {
+    const seasonEpisodes = content.filter(item => 
+      item.album_or_season === season && item.content_type === 'EPISODE'
+    );
+    setContent(seasonEpisodes);
+    setCurrentLevel('episodes');
+    setNavigationPath([
+      ...navigationPath, 
+      { type: 'season', value: season, label: season }
+    ]);
+  };
+
+  const handlePlayAudio = async (contentItem) => {
+    // For now, just show playing status
+    setCurrentTrack({
+      url: contentItem.cloudfront_url || '#',
+      title: contentItem.title || contentItem.file_name,
+      artist: contentItem.singer || contentItem.movie_or_show,
+      contentItem
+    });
+  };
+
+  const goBack = () => {
+    if (navigationPath.length === 0) return;
+    
+    const newPath = [...navigationPath];
+    newPath.pop();
+    setNavigationPath(newPath);
+    
+    if (newPath.length === 0) {
+      loadCategories();
+    } else {
+      // Rebuild content based on new path
+      const lastItem = newPath[newPath.length - 1];
+      if (lastItem.type === 'category') {
+        handleCategoryClick(lastItem.value);
+      } else if (lastItem.type === 'movie') {
+        handleMovieClick(lastItem.value);
+      } else if (lastItem.type === 'genre') {
+        handleGenreClick(lastItem.value);
+      } else if (lastItem.type === 'show') {
+        handleShowClick(lastItem.value);
       }
-    } catch (error) {
-      console.error('Error playing content:', error);
-      alert('Unable to play this content. Please try again.');
     }
   };
 
-  const handleSearch = (searchTerm) => {
-    if (!searchTerm) return;
-    
-    const filteredContent = content.filter(item =>
-      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.singer?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setContent(filteredContent);
-  };
-
-  const episodes = content.filter(item => item.content_type === 'EPISODE');
-
   return (
     <div className="app">
-      <Header onSearch={handleSearch} />
+      <Header />
       
       <main className="main-content">
-        {featuredContent.length > 0 && (
-          <HeroCarousel 
-            featuredContent={featuredContent}
-            onPlayContent={handlePlayContent}
-          />
-        )}
-
-        <section className="category-navigation">
-          <div className="container">
-            <div className="category-tabs">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
-                  onClick={() => loadCategoryContent(category)}
+        <div className="container">
+          {/* Breadcrumb Navigation */}
+          <div className="breadcrumb">
+            <button onClick={loadCategories} className="breadcrumb-item">
+              🏠 Home
+            </button>
+            {navigationPath.map((item, index) => (
+              <React.Fragment key={index}>
+                <span className="breadcrumb-separator">›</span>
+                <button 
+                  onClick={() => {
+                    if (index === navigationPath.length - 1) return;
+                    // Handle intermediate navigation
+                  }}
+                  className="breadcrumb-item"
                 >
-                  {category.replace('-', ' ').toUpperCase()}
+                  {item.label}
                 </button>
-              ))}
-            </div>
+              </React.Fragment>
+            ))}
+            {navigationPath.length > 0 && (
+              <button onClick={goBack} className="back-btn">
+                ← Back
+              </button>
+            )}
           </div>
-        </section>
 
-        <section className="daily-episodes">
-          <div className="container">
-            <div className="section-header">
-              <h2>Daily New Episodes</h2>
-              <button className="view-all-btn">View All →</button>
-            </div>
-            
-            {loading ? (
-              <div className="loading">Loading content...</div>
-            ) : (
-              <div className="content-grid">
-                {episodes.map(episode => (
-                  <ContentCard
-                    key={episode.content_id}
-                    content={episode}
-                    onPlay={handlePlayContent}
-                    showDuration={true}
-                  />
-                ))}
+          {/* Content Area */}
+          <div className="content-section">
+            {currentLevel === 'categories' && (
+              <div>
+                <h1>Browse Categories</h1>
+                <div className="categories-grid">
+                  {categories.map(category => (
+                    <div 
+                      key={category} 
+                      className="category-card"
+                      onClick={() => handleCategoryClick(category)}
+                    >
+                      <div className="category-icon">
+                        {category === 'film-songs' && '🎵'}
+                        {category === 'stories' && '📖'}
+                        {category === 'podcasts' && '🎙️'}
+                        {category === 'web-series' && '🎬'}
+                      </div>
+                      <h3>{category.replace('-', ' ').toUpperCase()}</h3>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {currentLevel === 'movies' && (
+              <div>
+                <h1>Film Songs - Movies</h1>
+                <ContentGrid 
+                  items={[...new Set(content.map(item => item.movie_or_show))]}
+                  type="movies"
+                  onItemClick={handleMovieClick}
+                  loading={loading}
+                />
+              </div>
+            )}
+
+            {currentLevel === 'songs' && (
+              <div>
+                <h1>Songs</h1>
+                <ContentGrid 
+                  items={content}
+                  type="songs"
+                  onItemClick={handlePlayAudio}
+                  loading={loading}
+                />
+              </div>
+            )}
+
+            {currentLevel === 'genres' && (
+              <div>
+                <h1>Stories - Choose Genre</h1>
+                <div className="genres-grid">
+                  <div className="genre-card" onClick={() => handleGenreClick('horror')}>
+                    <div className="genre-icon">👻</div>
+                    <h3>Horror</h3>
+                  </div>
+                  <div className="genre-card" onClick={() => handleGenreClick('thriller')}>
+                    <div className="genre-icon">🔪</div>
+                    <h3>Thriller</h3>
+                  </div>
+                  <div className="genre-card" onClick={() => handleGenreClick('mystery')}>
+                    <div className="genre-icon">🕵️</div>
+                    <h3>Mystery</h3>
+                  </div>
+                  <div className="genre-card" onClick={() => handleGenreClick('comedy')}>
+                    <div className="genre-icon">😂</div>
+                    <h3>Comedy</h3>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentLevel === 'shows' && (
+              <div>
+                <h1>Shows</h1>
+                <ContentGrid 
+                  items={content}
+                  type="shows"
+                  onItemClick={(item) => handleShowClick(item.movie_or_show)}
+                  loading={loading}
+                />
+              </div>
+            )}
+
+            {currentLevel === 'seasons' && (
+              <div>
+                <h1>Seasons</h1>
+                <ContentGrid 
+                  items={content}
+                  type="seasons"
+                  onItemClick={(item) => handleSeasonClick(item.album_or_season)}
+                  loading={loading}
+                />
+              </div>
+            )}
+
+            {currentLevel === 'episodes' && (
+              <div>
+                <h1>Episodes</h1>
+                <ContentGrid 
+                  items={content}
+                  type="episodes"
+                  onItemClick={handlePlayAudio}
+                  loading={loading}
+                />
               </div>
             )}
           </div>
-        </section>
+        </div>
       </main>
 
       {currentTrack && (
