@@ -6,10 +6,8 @@ import './styles/App.css';
 
 const App = () => {
   const [categories, setCategories] = useState([]);
-  const [content, setContent] = useState([]);
-  const [filteredContent, setFilteredContent] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [currentView, setCurrentView] = useState('categories');
+  const [allContent, setAllContent] = useState([]);
+  const [currentItems, setCurrentItems] = useState([]);
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [currentTrack, setCurrentTrack] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -23,140 +21,138 @@ const App = () => {
     setCategories(categoriesData);
   };
 
-  const loadCategoryContent = async (category) => {
+  // STEP 1: Click category (film-songs, stories, podcasts, web-series)
+  const handleCategoryClick = async (category) => {
     setLoading(true);
     const contentData = await getCategoryContent(category);
-    setContent(contentData);
-    setSelectedCategory(category);
+    setAllContent(contentData);
+    setBreadcrumb([category.toUpperCase()]);
+
+    if (category === 'film-songs') {
+      // Show albums: hit-kannada-songs-vol1
+      const albums = [...new Set(contentData.map(item => item.album_or_season))].filter(Boolean);
+      setCurrentItems(albums.map(name => ({ name, type: 'album', category })));
+    }
+    else if (category === 'stories') {
+      // Show genres: horror, thriller (3rd part of content_id)
+      const genres = [...new Set(contentData.map(item => {
+        const parts = item.content_id.split('#');
+        return parts[2]; // horror or thriller
+      }))].filter(Boolean);
+      setCurrentItems(genres.map(name => ({ name, type: 'genre', category })));
+    }
+    else if (category === 'podcasts') {
+      // Show seasons directly: season1
+      const seasons = [...new Set(contentData.map(item => item.album_or_season))].filter(Boolean);
+      setCurrentItems(seasons.map(name => ({ name, type: 'season', category })));
+    }
+    else if (category === 'web-series') {
+      // Show series: jackie1
+      const shows = [...new Set(contentData.map(item => item.movie_or_show))].filter(Boolean);
+      setCurrentItems(shows.map(name => ({ name, type: 'show', category })));
+    }
     setLoading(false);
-    return contentData;
   };
 
-  // Go Back Function
+  // Handle item clicks based on S3 structure
+  const handleItemClick = (item) => {
+    const newBreadcrumb = [...breadcrumb, item.name];
+    setBreadcrumb(newBreadcrumb);
+
+    if (item.category === 'film-songs') {
+      if (item.type === 'album') {
+        // Show movies in this album
+        const movies = [...new Set(allContent
+          .filter(content => content.album_or_season === item.name)
+          .map(content => content.movie_or_show))].filter(Boolean);
+        setCurrentItems(movies.map(name => ({ name, type: 'movie', category: item.category, album: item.name })));
+      }
+      else if (item.type === 'movie') {
+        // Show songs in this movie
+        const songs = allContent.filter(content => 
+          content.album_or_season === item.album && 
+          content.movie_or_show === item.name &&
+          content.content_type === 'EPISODE'
+        );
+        setCurrentItems(songs);
+      }
+    }
+    else if (item.category === 'stories') {
+      if (item.type === 'genre') {
+        // Show shows in this genre (BhoothadaMane1, BhoothadaMane2)
+        const shows = [...new Set(allContent
+          .filter(content => {
+            const parts = content.content_id.split('#');
+            return parts[2] === item.name; // genre match
+          })
+          .map(content => content.movie_or_show))].filter(Boolean);
+        setCurrentItems(shows.map(name => ({ name, type: 'show', category: item.category, genre: item.name })));
+      }
+      else if (item.type === 'show') {
+        // Show seasons in this show
+        const seasons = [...new Set(allContent
+          .filter(content => content.movie_or_show === item.name)
+          .map(content => content.album_or_season))].filter(Boolean);
+        setCurrentItems(seasons.map(name => ({ name, type: 'season', category: item.category, show: item.name })));
+      }
+      else if (item.type === 'season') {
+        // Show episodes in this season
+        const episodes = allContent.filter(content => 
+          content.movie_or_show === item.show &&
+          content.album_or_season === item.name &&
+          content.content_type === 'EPISODE'
+        );
+        setCurrentItems(episodes);
+      }
+    }
+    else if (item.category === 'podcasts') {
+      if (item.type === 'season') {
+        // Show episodes directly
+        const episodes = allContent.filter(content => 
+          content.album_or_season === item.name &&
+          content.content_type === 'EPISODE'
+        );
+        setCurrentItems(episodes);
+      }
+    }
+    else if (item.category === 'web-series') {
+      if (item.type === 'show') {
+        // Show seasons
+        const seasons = [...new Set(allContent
+          .filter(content => content.movie_or_show === item.name)
+          .map(content => content.album_or_season))].filter(Boolean);
+        setCurrentItems(seasons.map(name => ({ name, type: 'season', category: item.category, show: item.name })));
+      }
+      else if (item.type === 'season') {
+        // Show episodes
+        const episodes = allContent.filter(content => 
+          content.movie_or_show === item.show &&
+          content.album_or_season === item.name &&
+          content.content_type === 'EPISODE'
+        );
+        setCurrentItems(episodes);
+      }
+    }
+  };
+
   const goBack = () => {
-    if (breadcrumb.length === 0) return;
+    if (breadcrumb.length <= 1) {
+      // Go back to categories
+      setBreadcrumb([]);
+      setCurrentItems([]);
+      return;
+    }
 
     const newBreadcrumb = [...breadcrumb];
     newBreadcrumb.pop();
     setBreadcrumb(newBreadcrumb);
 
-    if (newBreadcrumb.length === 0) {
-      setCurrentView('categories');
-    } else {
-      const lastCrumb = newBreadcrumb[newBreadcrumb.length - 1];
-      
-      if (lastCrumb.type === 'category') {
-        handleCategoryClick(lastCrumb.value);
-      } else if (lastCrumb.type === 'album') {
-        showAlbumSongs(lastCrumb.value);
-      } else if (lastCrumb.type === 'genre') {
-        showGenreShows(selectedCategory, lastCrumb.value);
-      } else if (lastCrumb.type === 'show') {
-        showShowSeasons(lastCrumb.value);
-      }
+    // Rebuild the view for the previous level
+    if (newBreadcrumb.length === 1) {
+      // Back to category level
+      handleCategoryClick(newBreadcrumb[0].toLowerCase().replace(' ', '-'));
     }
-  };
-
-  // Category Click - Shows albums/genres/shows
-  const handleCategoryClick = async (category) => {
-    const contentData = await loadCategoryContent(category);
-    setBreadcrumb([{name: category.replace('-', ' ').toUpperCase(), type: 'category', value: category}]);
-
-    if (category === 'film-songs') {
-      // Show albums: hit-kannada-songs-vol1
-      const albums = [...new Set(contentData.map(item => item.album_or_season))];
-      setFilteredContent(albums.map(album => ({name: album, type: 'album'})));
-      setCurrentView('list');
-    } 
-    else if (category === 'stories') {
-      // Show genres: horror, thriller
-      const genres = [...new Set(contentData.map(item => {
-        const path = item.content_id.split('#');
-        return path[2]; // horror or thriller
-      }))];
-      setFilteredContent(genres.map(genre => ({name: genre, type: 'genre'})));
-      setCurrentView('list');
-    }
-    else if (category === 'podcasts') {
-      // Show seasons directly: season1
-      const seasons = [...new Set(contentData.map(item => item.album_or_season))];
-      setFilteredContent(seasons.map(season => ({name: season, type: 'season'})));
-      setCurrentView('list');
-    }
-    else if (category === 'web-series') {
-      // Show series: jackie1
-      const series = [...new Set(contentData.map(item => item.movie_or_show))];
-      setFilteredContent(series.map(show => ({name: show, type: 'show'})));
-      setCurrentView('list');
-    }
-  };
-
-  // Film Songs: Album → Movies → Songs
-  const showAlbumMovies = (album) => {
-    const movies = [...new Set(content.filter(item => 
-      item.album_or_season === album
-    ).map(item => item.movie_or_show))];
-    
-    setBreadcrumb([...breadcrumb, {name: album, type: 'album', value: album}]);
-    setFilteredContent(movies.map(movie => ({name: movie, type: 'movie'})));
-    setCurrentView('list');
-  };
-
-  const showAlbumSongs = (movie) => {
-    const songs = content.filter(item => 
-      item.movie_or_show === movie && item.content_type === 'EPISODE'
-    );
-    
-    setBreadcrumb([...breadcrumb, {name: movie, type: 'movie', value: movie}]);
-    setFilteredContent(songs);
-    setCurrentView('episodes');
-  };
-
-  // Stories: Genre → Shows → Seasons → Episodes
-  const showGenreShows = (category, genre) => {
-    const shows = [...new Set(content.filter(item => {
-      const path = item.content_id.split('#');
-      return path[2] === genre; // horror or thriller
-    }).map(item => item.movie_or_show))];
-    
-    setBreadcrumb([...breadcrumb, {name: genre, type: 'genre', value: genre}]);
-    setFilteredContent(shows.map(show => ({name: show, type: 'show'})));
-    setCurrentView('list');
-  };
-
-  const showShowSeasons = (show) => {
-    const seasons = [...new Set(content.filter(item => 
-      item.movie_or_show === show
-    ).map(item => item.album_or_season))];
-    
-    setBreadcrumb([...breadcrumb, {name: show, type: 'show', value: show}]);
-    setFilteredContent(seasons.map(season => ({name: season, type: 'season'})));
-    setCurrentView('list');
-  };
-
-  const showSeasonEpisodes = (season) => {
-    const episodes = content.filter(item => 
-      item.album_or_season === season && item.content_type === 'EPISODE'
-    );
-    
-    setBreadcrumb([...breadcrumb, {name: season, type: 'season', value: season}]);
-    setFilteredContent(episodes);
-    setCurrentView('episodes');
-  };
-
-  // Handle clicks
-  const handleItemClick = (item) => {
-    if (item.type === 'album') {
-      showAlbumMovies(item.name);
-    } else if (item.type === 'movie') {
-      showAlbumSongs(item.name);
-    } else if (item.type === 'genre') {
-      showGenreShows(selectedCategory, item.name);
-    } else if (item.type === 'show') {
-      showShowSeasons(item.name);
-    } else if (item.type === 'season') {
-      showSeasonEpisodes(item.name);
-    }
+    // Add more back navigation logic as needed
   };
 
   const handlePlayContent = (contentItem) => {
@@ -187,54 +183,61 @@ const App = () => {
     </div>
   );
 
-  const renderList = () => (
-    <div className="content-section">
-      <div className="content-grid">
-        {filteredContent.map((item, index) => (
-          <div key={index} className="content-card" onClick={() => handleItemClick(item)}>
-            <div className="card-image">
-              {item.type === 'album' && '💿'}
-              {item.type === 'movie' && '🎬'}
-              {item.type === 'genre' && '📖'}
-              {item.type === 'show' && '📺'}
-              {item.type === 'season' && '📅'}
-            </div>
-            <h3>{item.name}</h3>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const renderItems = () => {
+    // Check if items are episodes (have content_id)
+    const isEpisodes = currentItems.length > 0 && currentItems[0].content_id;
 
-  const renderEpisodes = () => (
-    <div className="content-section">
-      <div className="episodes-list">
-        {filteredContent.map((episode, index) => (
-          <div key={episode.content_id} className="episode-item" onClick={() => handlePlayContent(episode)}>
-            <div className="episode-number">#{index + 1}</div>
-            <div className="episode-info">
-              <h4>{episode.title || episode.file_name}</h4>
-              <p>{episode.singer ? `Singer: ${episode.singer}` : 'Episode'}</p>
-            </div>
-            <button className="play-btn">▶️</button>
+    if (isEpisodes) {
+      return (
+        <div className="episodes-section">
+          <h2>Episodes</h2>
+          <div className="episodes-list">
+            {currentItems.map((episode, index) => (
+              <div key={episode.content_id} className="episode-item" onClick={() => handlePlayContent(episode)}>
+                <div className="episode-number">#{index + 1}</div>
+                <div className="episode-info">
+                  <h4>{episode.title || episode.file_name}</h4>
+                  <p>{episode.singer ? `Singer: ${episode.singer}` : 'Episode'}</p>
+                </div>
+                <button className="play-btn">▶️</button>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="content-section">
+        <div className="content-grid">
+          {currentItems.map((item, index) => (
+            <div key={index} className="content-card" onClick={() => handleItemClick(item)}>
+              <div className="card-image">
+                {item.type === 'album' && '💿'}
+                {item.type === 'movie' && '🎬'}
+                {item.type === 'genre' && '📖'}
+                {item.type === 'show' && '📺'}
+                {item.type === 'season' && '📅'}
+              </div>
+              <h3>{item.name}</h3>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="app">
       <Header />
       
       <main className="main-content">
-        {/* Breadcrumb with Go Back Button */}
         {breadcrumb.length > 0 && (
           <div className="breadcrumb">
             <button className="go-back-btn" onClick={goBack}>← Go Back</button>
             <span>Home</span>
             {breadcrumb.map((crumb, index) => (
-              <span key={index}> > {crumb.name}</span>
+              <span key={index}> > {crumb}</span>
             ))}
           </div>
         )}
@@ -242,9 +245,7 @@ const App = () => {
         <div className="container">
           {loading && <div className="loading">Loading...</div>}
           
-          {currentView === 'categories' && renderCategories()}
-          {currentView === 'list' && renderList()}
-          {currentView === 'episodes' && renderEpisodes()}
+          {breadcrumb.length === 0 ? renderCategories() : renderItems()}
         </div>
       </main>
 
