@@ -15,53 +15,74 @@ const AudioPlayer = ({ currentTrack, onTrackEnd }) => {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Cleanup previous instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
+      hlsRef.current = null;
     }
 
+    console.log('Loading HLS URL:', currentTrack.url);
+
     if (Hls.isSupported()) {
-      const hls = new Hls();
-      hlsRef.current = hls;
+      const hls = new Hls({
+        debug: false,
+        enableWorker: false,
+      });
       
+      hlsRef.current = hls;
       hls.loadSource(currentTrack.url);
       hls.attachMedia(audio);
       
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.log('HLS manifest parsed, starting playback');
         setError('');
         audio.play().then(() => {
           setIsPlaying(true);
         }).catch(err => {
+          console.error('Play failed:', err);
           setError('Playback failed');
         });
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
-        setError('Cannot play HLS format - needs HLS.js library');
-        setIsPlaying(false);
+        console.error('HLS Error:', data);
+        if (data.fatal) {
+          setError(`HLS Error: ${data.details}`);
+          setIsPlaying(false);
+        }
       });
       
     } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native HLS support
       audio.src = currentTrack.url;
+      audio.load();
       audio.play().then(() => {
         setIsPlaying(true);
         setError('');
       }).catch(err => {
+        console.error('Native play failed:', err);
         setError('Playback failed');
       });
     } else {
-      setError('Cannot play HLS format - needs HLS.js library');
+      setError('HLS streaming not supported in this browser');
     }
 
+    // Audio event listeners
     const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
+    const updateDuration = () => setDuration(audio.duration || 0);
     const handleEnded = () => {
       setIsPlaying(false);
       onTrackEnd?.();
+    };
+    const handleError = () => {
+      setError('Audio playback error');
+      setIsPlaying(false);
     };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       if (hlsRef.current) {
@@ -70,6 +91,7 @@ const AudioPlayer = ({ currentTrack, onTrackEnd }) => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [currentTrack, onTrackEnd]);
 
@@ -84,7 +106,8 @@ const AudioPlayer = ({ currentTrack, onTrackEnd }) => {
       audio.play().then(() => {
         setIsPlaying(true);
       }).catch(err => {
-        setError('Unable to play audio');
+        console.error('Play toggle failed:', err);
+        setError('Unable to play');
       });
     }
   };
