@@ -13,7 +13,19 @@ const api = axios.create({
 export const getCategories = async () => {
   try {
     const response = await api.get('/shows');
-    const shows = response.data;
+    let shows = response.data;
+    
+    // Parse the response body if it's a string
+    if (typeof shows === 'string') {
+      shows = JSON.parse(shows);
+    }
+    
+    // Ensure shows is an array
+    if (!Array.isArray(shows)) {
+      console.log('Shows response:', shows);
+      return ['film-songs', 'stories', 'podcasts', 'web-series'];
+    }
+    
     const categories = [...new Set(shows.map(show => show.categoryEnglish))];
     return categories;
   } catch (error) {
@@ -25,7 +37,14 @@ export const getCategories = async () => {
 export const getCategoryContent = async (category) => {
   try {
     const response = await api.get(`/shows?category=${category}`);
-    return response.data || [];
+    let data = response.data;
+    
+    // Parse the response body if it's a string
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching category content:', error);
     return [];
@@ -35,7 +54,14 @@ export const getCategoryContent = async (category) => {
 export const getShowEpisodes = async (showId) => {
   try {
     const response = await api.get(`/shows/${showId}/episodes`);
-    return response.data || [];
+    let data = response.data;
+    
+    // Parse the response body if it's a string
+    if (typeof data === 'string') {
+      data = JSON.parse(data);
+    }
+    
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Error fetching episodes:', error);
     return [];
