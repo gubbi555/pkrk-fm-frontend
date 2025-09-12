@@ -317,9 +317,16 @@ async function loadEpisodes(showId, showTitle, season = '') {
         showView('episodes');
         
         let breadcrumbPath = `${currentCategory.replace('-', ' ').toUpperCase()}`;
-        if (currentSubcategory) breadcrumbPath += ` > ${currentSubcategory.replace('-', ' ').toUpperCase()}`;
-        breadcrumbPath += ` > ${showTitle}`;
-        if (season) breadcrumbPath += ` > ${season.toUpperCase()}`;
+        
+        // For podcasts, don't show the show title in breadcrumb
+        if (currentCategory === 'podcasts') {
+            if (currentSubcategory) breadcrumbPath += ` > ${currentSubcategory.replace('-', ' ').toUpperCase()}`;
+        } else {
+            // For other categories, show full path
+            if (currentSubcategory) breadcrumbPath += ` > ${currentSubcategory.replace('-', ' ').toUpperCase()}`;
+            breadcrumbPath += ` > ${showTitle}`;
+            if (season) breadcrumbPath += ` > ${season.toUpperCase()}`;
+        }
         
         updateBreadcrumb(breadcrumbPath);
     } catch (error) {
@@ -428,7 +435,13 @@ function closeAudioPlayer() {
 // Navigation
 function goBack() {
     if (currentView === 'episodes') {
-        if (currentSeason) {
+        // For podcasts, go back to category level
+        if (currentCategory === 'podcasts') {
+            loadShows(currentCategory);
+            currentSubcategory = '';
+            currentShow = null;
+            currentSeason = '';
+        } else if (currentSeason) {
             loadSeasons(currentShow.showId, currentShow.showTitle);
         } else if (currentSubcategory) {
             loadShowsInSubcategory(currentSubcategory);
