@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import AudioPlayer from './components/AudioPlayer';
-import { getCategories, getCategoryContent } from './services/api';
+import { getCategories, getCategoryContent, getShowEpisodes } from './services/api';
 import './styles/App.css';
 
 const App = () => {
@@ -45,78 +45,21 @@ const App = () => {
   const handleCategoryClick = async (category) => {
     const contentData = await loadCategoryContent(category);
     setBreadcrumb([category.toUpperCase()]);
-
-    if (category === 'film-songs') {
-      // Show albums
-      const albums = [...new Set(contentData.map(item => item.album_or_season))];
-      setCurrentItems(albums.map(name => ({ name, type: 'album', data: name })));
-    }
-    else if (category === 'stories') {
-      // Show genres (horror, thriller)
-      const genres = [...new Set(contentData.map(item => {
-        const parsed = parseContentPath(item.content_id);
-        return parsed.genre;
-      }))].filter(Boolean);
-      setCurrentItems(genres.map(name => ({ name, type: 'genre', data: name })));
-    }
-    else if (category === 'podcasts') {
-      // Show seasons directly
-      const seasons = [...new Set(contentData.map(item => item.album_or_season))];
-      setCurrentItems(seasons.map(name => ({ name, type: 'season', data: name })));
-    }
-    else if (category === 'web-series') {
-      // Show series
-      const shows = [...new Set(contentData.map(item => item.movie_or_show))];
-      setCurrentItems(shows.map(name => ({ name, type: 'show', data: name })));
-    }
+    
+    // Show all shows in the category
+    setCurrentItems(contentData.map(show => ({
+      name: show.showTitleEnglish || show.showTitle,
+      type: 'show',
+      data: show
+    })));
   };
 
-  const handleItemClick = (item) => {
+  const handleItemClick = async (item) => {
     setBreadcrumb([...breadcrumb, item.name]);
-
-    if (item.type === 'album') {
-      // Film songs: show movies in album
-      const movies = [...new Set(allContent
-        .filter(content => content.album_or_season === item.data)
-        .map(content => content.movie_or_show))];
-      setCurrentItems(movies.map(name => ({ name, type: 'movie', data: { album: item.data, movie: name } })));
-    }
-    else if (item.type === 'movie') {
-      // Film songs: show songs in movie
-      const songs = allContent.filter(content => 
-        content.album_or_season === item.data.album && 
-        content.movie_or_show === item.data.movie &&
-        content.content_type === 'EPISODE'
-      );
-      setCurrentItems(songs);
-    }
-    else if (item.type === 'genre') {
-      // Stories: show shows in genre
-      const shows = [...new Set(allContent
-        .filter(content => {
-          const parsed = parseContentPath(content.content_id);
-          return parsed.genre === item.data;
-        })
-        .map(content => content.movie_or_show))];
-      setCurrentItems(shows.map(name => ({ name, type: 'show', data: { genre: item.data, show: name } })));
-    }
-    else if (item.type === 'show') {
-      // Stories/Web-series: show seasons in show
-      const seasons = [...new Set(allContent
-        .filter(content => content.movie_or_show === item.data.show || content.movie_or_show === item.data)
-        .map(content => content.album_or_season))];
-      setCurrentItems(seasons.map(name => ({ 
-        name, 
-        type: 'season', 
-        data: { show: item.data.show || item.data, season: name } 
-      })));
-    }
-    else if (item.type === 'season') {
-      // Show episodes in season
-      const episodes = allContent.filter(content => 
-        content.album_or_season === item.data.season || content.album_or_season === item.data &&
-        content.content_type === 'EPISODE'
-      );
+    
+    if (item.type === 'show') {
+      // Load episodes for the show
+      const episodes = await getShowEpisodes(item.data.showId);
       setCurrentItems(episodes);
     }
   };
@@ -140,9 +83,9 @@ const App = () => {
 
   const handlePlayContent = (contentItem) => {
     setCurrentTrack({
-      url: contentItem.cloudfront_url,
-      title: contentItem.title || contentItem.file_name,
-      artist: contentItem.singer || contentItem.movie_or_show || 'PKRK FM'
+      url: `https://d1f6bwiv6jb91l.cloudfront.net/${contentItem.s3Key}`,
+      title: contentItem.title || contentItem.titleEnglish,
+      artist: contentItem.singer || 'PKRK FM'
     });
   };
 
@@ -166,7 +109,7 @@ const App = () => {
   );
 
   const renderItems = () => {
-    const isEpisodes = currentItems.length > 0 && currentItems[0].content_id;
+    const isEpisodes = currentItems.length > 0 && currentItems[0].audioId;
 
     if (isEpisodes) {
       return (
@@ -174,10 +117,10 @@ const App = () => {
           <h2>Episodes</h2>
           <div className="episodes-list">
             {currentItems.map((episode, index) => (
-              <div key={episode.content_id} className="episode-item" onClick={() => handlePlayContent(episode)}>
+              <div key={episode.audioId} className="episode-item" onClick={() => handlePlayContent(episode)}>
                 <div className="episode-number">#{index + 1}</div>
                 <div className="episode-info">
-                  <h4>{episode.title || episode.file_name}</h4>
+                  <h4>{episode.title || episode.titleEnglish}</h4>
                   <p>{episode.singer ? `Singer: ${episode.singer}` : 'Episode'}</p>
                 </div>
                 <button className="play-btn">▶️</button>
