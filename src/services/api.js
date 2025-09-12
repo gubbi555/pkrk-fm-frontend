@@ -36,7 +36,8 @@ export const getCategories = async () => {
 
 export const getCategoryContent = async (category) => {
   try {
-    const response = await api.get(`/shows?category=${category}`);
+    // Get all shows and filter client-side since API Gateway isn't passing query params
+    const response = await api.get('/shows');
     let data = response.data;
     
     // Parse the response body if it's a string
@@ -44,7 +45,15 @@ export const getCategoryContent = async (category) => {
       data = JSON.parse(data);
     }
     
-    return Array.isArray(data) ? data : [];
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    
+    // Filter by category on client side
+    const filteredShows = data.filter(show => show.categoryEnglish === category);
+    console.log(`Category: ${category}, Total shows: ${data.length}, Filtered: ${filteredShows.length}`);
+    
+    return filteredShows;
   } catch (error) {
     console.error('Error fetching category content:', error);
     return [];
