@@ -190,10 +190,11 @@ function loadShowsInSubcategory(subcategory) {
 function displayActualShows(shows) {
     showsTitle.textContent = `${currentSubcategory.replace('-', ' ').toUpperCase()} Shows`;
     
-    // For podcasts, show seasons directly (no show level)
+    // For podcasts, go directly to episodes (no intermediate show level)
     if (currentCategory === 'podcasts') {
-        const seasons = [...new Set(shows.map(show => show.seasonEnglish || show.subcategoryEnglish))];
-        displayPodcastSeasons(seasons);
+        if (shows.length > 0) {
+            loadEpisodes(shows[0].showId, `Podcast ${currentSubcategory.toUpperCase()}`);
+        }
         return;
     }
     
@@ -251,24 +252,7 @@ function displayActualShows(shows) {
     }).join('');
 }
 
-// Display Podcast Seasons (podcasts/season1, podcasts/season2)
-function displayPodcastSeasons(seasons) {
-    showsTitle.textContent = 'Podcast Seasons';
-    
-    showsGrid.innerHTML = seasons.map(season => `
-        <div class="content-card" onclick="loadPodcastEpisodes('${season}')">
-            <div class="card-image">
-                <span class="placeholder-image">📅</span>
-            </div>
-            <div class="card-content">
-                <h3>${season.replace('-', ' ').toUpperCase()}</h3>
-                <p>Podcast episodes</p>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Load Podcast Episodes - go directly to episodes
+// For podcasts, go directly to episodes from subcategory
 function loadPodcastEpisodes(season) {
     const seasonShows = allShows.filter(show => 
         show.categoryEnglish === 'podcasts' && 
@@ -276,7 +260,7 @@ function loadPodcastEpisodes(season) {
     );
     
     if (seasonShows.length > 0) {
-        // Go directly to episodes, no extra season level
+        // Go directly to episodes
         loadEpisodes(seasonShows[0].showId, `Podcast ${season.toUpperCase()}`);
     }
 }
