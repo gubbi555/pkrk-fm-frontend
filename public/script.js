@@ -197,6 +197,34 @@ function displayActualShows(shows) {
         return;
     }
     
+    // For film songs, go directly to episodes (no seasons)
+    if (currentCategory === 'film-songs') {
+        const uniqueShows = {};
+        shows.forEach(show => {
+            const showName = show.showTitleEnglish || show.showTitle;
+            if (!uniqueShows[showName]) {
+                uniqueShows[showName] = show;
+            }
+        });
+        
+        showsGrid.innerHTML = Object.values(uniqueShows).map(show => {
+            const bgImage = show.backgroundUrl || `images/show-backgrounds/${show.showId}-bg.jpg`;
+            return `
+                <div class="content-card" onclick="loadEpisodes('${show.showId}', '${show.showTitleEnglish || show.showTitle}')">
+                    <div class="card-image" style="background-image: url('${bgImage}')">
+                        <span class="placeholder-image">🎵</span>
+                    </div>
+                    <div class="card-content">
+                        <h3>${show.showTitleEnglish || show.showTitle}</h3>
+                        <p>${show.description || 'No description available'}</p>
+                        <p><strong>Songs Available</strong></p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
+    
     // For stories, group by show name (BhootadaMane1, BhootadaMane2)
     const uniqueShows = {};
     shows.forEach(show => {
@@ -240,7 +268,7 @@ function displayPodcastSeasons(seasons) {
     `).join('');
 }
 
-// Load Podcast Episodes
+// Load Podcast Episodes - go directly to episodes
 function loadPodcastEpisodes(season) {
     const seasonShows = allShows.filter(show => 
         show.categoryEnglish === 'podcasts' && 
@@ -248,7 +276,8 @@ function loadPodcastEpisodes(season) {
     );
     
     if (seasonShows.length > 0) {
-        loadEpisodes(seasonShows[0].showId, `Podcast ${season.toUpperCase()}`, season);
+        // Go directly to episodes, no extra season level
+        loadEpisodes(seasonShows[0].showId, `Podcast ${season.toUpperCase()}`);
     }
 }
 
