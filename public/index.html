@@ -1,16 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="PKRK FM - Kannada Audio Streaming Platform" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PKRK FM - Kannada Audio Streaming</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <div class="logo">PKRK</div>
+                <div class="search-container">
+                    <input type="text" placeholder="Search audiobook & stories" class="search-input" id="searchInput" onkeypress="handleSearchKeypress(event)">
+                    <button class="search-btn" onclick="performSearch()">🔍</button>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="language-selector">
+                    <span>Languages</span>
+                    <select class="language-dropdown" onchange="handleLanguageChange(this.value)">
+                        <option value="kannada">Kannada</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="english">English</option>
+                        <option value="tamil">Tamil</option>
+                        <option value="telugu">Telugu</option>
+                    </select>
+                </div>
+                <div class="nav-item" onclick="goHome()">🏠 Home</div>
+                <div class="nav-item">📺 PKRK TV</div>
+                <div class="nav-item">📱 Download App</div>
+                <div class="nav-item trial" onclick="showFreeTrialSignup()">Get Free Trial</div>
+                <div class="theme-toggle">🌙</div>
+                <div class="auth-btn">Login / Signup</div>
+            </div>
+        </nav>
+
+        <header class="header">
+            <h1>🎵 PKRK FM</h1>
+            <p>Kannada Audio Streaming Platform</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Breadcrumb -->
+            <div id="breadcrumb" class="breadcrumb" style="display: none;">
+                <button id="goBack" class="go-back-btn">← Go Back</button>
+                <span id="breadcrumbText">Home</span>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading">Loading...</div>
+
+            <!-- Categories -->
+            <div id="categories" class="categories-section" style="display: none;">
+                <h2>Browse Categories</h2>
+                <div class="categories-grid" id="categoriesGrid"></div>
+            </div>
+
+            <!-- Shows -->
+            <div id="shows" class="content-section" style="display: none;">
+                <h2 id="showsTitle">Shows</h2>
+                <div class="content-grid" id="showsGrid"></div>
+            </div>
+
+            <!-- Episodes -->
+            <div id="episodes" class="episodes-section" style="display: none;">
+                <h2 id="episodesTitle">Episodes</h2>
+                <div class="episodes-list" id="episodesList"></div>
+            </div>
+        </main>
+
+        <!-- Audio Player -->
+        <div id="audioPlayer" class="audio-player" style="display: none;">
+            <div class="player-info">
+                <h4 id="trackTitle">Track Title</h4>
+                <p id="trackArtist">Artist</p>
+            </div>
+            <div class="player-controls">
+                <button id="playPauseBtn" class="play-pause-btn">▶️</button>
+                <div class="time-info">
+                    <span id="currentTime">0:00</span>
+                    <div class="progress-bar">
+                        <div id="progress" class="progress"></div>
+                    </div>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+            <button id="closePlayer" class="close-btn">✕</button>
+            <audio id="audio" preload="metadata"></audio>
+        </div>
+    </div>
+
+    <!-- AWS Cognito SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.12.min.js"></script>
+    <script src="https://unpkg.com/amazon-cognito-identity-js@6.3.12/dist/amazon-cognito-identity.min.js"></script>
+    
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
 </html>
