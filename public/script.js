@@ -513,7 +513,39 @@ function showView(view) {
 }
 
 function updateBreadcrumb(text) {
-    breadcrumbText.textContent = `Home > ${text}`;
+    const parts = text.split(' > ');
+    let breadcrumbHTML = '<span class="breadcrumb-item" onclick="goHome()">Home</span>';
+    
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const isLast = i === parts.length - 1;
+        
+        if (isLast) {
+            breadcrumbHTML += ` > <span class="breadcrumb-current">${part}</span>`;
+        } else {
+            const clickHandler = getBreadcrumbClickHandler(i, parts);
+            breadcrumbHTML += ` > <span class="breadcrumb-item" onclick="${clickHandler}">${part}</span>`;
+        }
+    }
+    
+    breadcrumbText.innerHTML = breadcrumbHTML;
+}
+
+function getBreadcrumbClickHandler(index, parts) {
+    if (index === 0) {
+        // Category level (STORIES, PODCASTS, etc.)
+        const category = parts[0].toLowerCase().replace(' ', '-');
+        return `loadShows('${category}')`;
+    } else if (index === 1) {
+        // Subcategory level (THRILLER, HORROR, etc.)
+        const subcategory = parts[1].toLowerCase().replace(' ', '-');
+        return `loadShowsInSubcategory('${subcategory}')`;
+    } else if (index === 2) {
+        // Show level (Blood Case 2, etc.)
+        const showTitle = parts[2];
+        return `loadSeasons('${currentShow?.showId}', '${showTitle}')`;
+    }
+    return '';
 }
 
 function showLoading(show) {
