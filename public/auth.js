@@ -351,6 +351,7 @@ function showTrialOfferModal() {
                 <div class="trial-header">
                     <h2>🎵 PKRK FM Premium</h2>
                     <div class="trial-badge">
+                        <span class="close-trial" onclick="closeTrialModal()">❌</span>
                         <span class="trial-days">7 Days</span>
                         <span class="trial-free">FREE</span>
                         <span class="trial-text">Trial</span>
