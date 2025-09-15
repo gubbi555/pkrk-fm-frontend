@@ -337,6 +337,69 @@ function logout() {
 
 // Show Free Trial Signup
 function showFreeTrialSignup() {
+    showTrialOfferModal();
+}
+
+// Show Trial Offer Modal
+function showTrialOfferModal() {
+    const modal = document.createElement('div');
+    modal.className = 'auth-modal';
+    modal.innerHTML = `
+        <div class="auth-modal-content trial-offer">
+            <span class="close-modal" onclick="closeTrialModal()">&times;</span>
+            <div class="trial-content">
+                <div class="trial-header">
+                    <h2>🎵 PKRK FM Premium</h2>
+                    <div class="trial-badge">
+                        <span class="trial-days">7 Days</span>
+                        <span class="trial-free">FREE</span>
+                        <span class="trial-text">Trial</span>
+                    </div>
+                </div>
+                
+                <div class="trial-rating">
+                    <span class="rating">4.6 ⭐⭐⭐⭐⭐</span>
+                    <span class="reviews">(1M reviews)</span>
+                </div>
+                
+                <div class="trial-offer">
+                    <h3>Start trial by paying ₹2</h3>
+                    <p class="refund-text">💰 Refunded immediately</p>
+                    <p class="trial-info">Trial Starts, Cancel Anytime</p>
+                </div>
+                
+                <div class="trial-benefits">
+                    <div class="benefit">🎧 Enjoy 10,000+ shows for free</div>
+                    <div class="benefit">🎵 Unlimited Kannada content</div>
+                    <div class="benefit">📱 Download & listen offline</div>
+                    <div class="benefit">🚫 No ads during playback</div>
+                </div>
+                
+                <div class="trial-pricing">
+                    <div class="autopay-info">
+                        <strong>Autopay ₹499/3 Months</strong>
+                        <p>After 7 days, autopay every 3 Months</p>
+                    </div>
+                </div>
+                
+                <button onclick="proceedToSignup()" class="trial-start-btn">Start Free Trial</button>
+                <p class="trial-terms">By continuing, you agree to our Terms & Conditions</p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Close trial modal
+function closeTrialModal() {
+    const modal = document.querySelector('.auth-modal');
+    if (modal) modal.remove();
+}
+
+// Proceed to signup after trial offer
+function proceedToSignup() {
+    closeTrialModal();
     showAuthModal();
     // Auto-switch to signup tab
     setTimeout(() => {
@@ -396,6 +459,8 @@ window.showProfile = showProfile;
 window.showSettings = showSettings;
 window.showSubscription = showSubscription;
 window.logout = logout;
+window.closeTrialModal = closeTrialModal;
+window.proceedToSignup = proceedToSignup;
 
 function showProfile() {
     alert('Profile page - Coming soon!');
