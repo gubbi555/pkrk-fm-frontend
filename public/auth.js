@@ -320,8 +320,7 @@ function verifyUser() {
         }
         
         console.log('Verification successful');
-        const contactType = window.signupContactType === 'email' ? 'email' : 'mobile number';
-        alert(`Account verified! Your ${contactType} has been confirmed. Please login.`);
+        alert('Account verified! Please login.');
         closeAuthModal();
     });
 }
