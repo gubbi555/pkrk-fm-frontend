@@ -112,6 +112,12 @@ function displayCategories(categories) {
 
 // Load Subcategories
 async function loadShows(category) {
+    // Check authentication first
+    if (!requireAuth()) {
+        showLoading(false);
+        return;
+    }
+    
     showLoading(true);
     currentCategory = category;
     
@@ -174,6 +180,11 @@ function displaySubcategories(subcategories, category) {
 
 // Load Shows in Subcategory
 function loadShowsInSubcategory(subcategory) {
+    // Check authentication first
+    if (!requireAuth()) {
+        return;
+    }
+    
     currentSubcategory = subcategory;
     
     const categoryShows = allShows.filter(show => 
@@ -267,6 +278,11 @@ function loadPodcastEpisodes(season) {
 
 // Load Seasons (stories/horror/BhootadaMane1/season1, season2)
 function loadSeasons(showId, showTitle) {
+    // Check authentication first
+    if (!requireAuth()) {
+        return;
+    }
+    
     currentShow = { showId, showTitle };
     
     // Find all seasons for this show
@@ -306,6 +322,12 @@ function displaySeasons(seasons, showTitle, seasonShows) {
 
 // Load Episodes
 async function loadEpisodes(showId, showTitle, season = '') {
+    // Check authentication first
+    if (!requireAuth()) {
+        showLoading(false);
+        return;
+    }
+    
     showLoading(true);
     currentShow = { showId, showTitle };
     currentSeason = season;
@@ -356,6 +378,11 @@ function displayEpisodes(episodes, showTitle, season = '') {
 
 // Play Episode
 function playEpisode(s3Key, title, artist) {
+    // Check authentication first
+    if (!requireAuth()) {
+        return;
+    }
+    
     const audioUrl = `${CLOUDFRONT_URL}/${s3Key}`;
     
     trackTitle.textContent = title;

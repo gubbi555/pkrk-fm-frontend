@@ -453,6 +453,31 @@ function toggleProfileMenu(event) {
     }
 }
 
+// Check if user is authenticated before allowing access
+function requireAuth() {
+    const user = userPool.getCurrentUser();
+    if (!user) {
+        showFreeTrialSignup();
+        return false;
+    }
+    
+    let isAuthenticated = false;
+    user.getSession((err, session) => {
+        if (err || !session.isValid()) {
+            showFreeTrialSignup();
+            return;
+        }
+        isAuthenticated = true;
+    });
+    
+    if (!isAuthenticated) {
+        showFreeTrialSignup();
+        return false;
+    }
+    
+    return true;
+}
+
 // Make functions globally available
 window.toggleProfileMenu = toggleProfileMenu;
 window.showProfile = showProfile;
@@ -461,6 +486,7 @@ window.showSubscription = showSubscription;
 window.logout = logout;
 window.closeTrialModal = closeTrialModal;
 window.proceedToSignup = proceedToSignup;
+window.requireAuth = requireAuth;
 
 function showProfile() {
     alert('Profile page - Coming soon!');
