@@ -32,6 +32,82 @@ body {
     gap: 20px;
 }
 
+/* Hamburger Menu */
+.hamburger-menu {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.hamburger-icon span {
+    width: 20px;
+    height: 2px;
+    background: #fff;
+    transition: all 0.3s;
+}
+
+.hamburger-menu:hover .hamburger-icon span {
+    background: #e74c3c;
+}
+
+.hamburger-dropdown {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    min-width: 280px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 2000;
+    padding: 15px 0;
+}
+
+.menu-section {
+    padding: 0 20px;
+    margin-bottom: 10px;
+}
+
+.menu-item {
+    padding: 12px 20px;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+    font-size: 14px;
+}
+
+.menu-item:hover {
+    background: #3a3a3a;
+    color: #fff;
+}
+
+.menu-subtitle {
+    padding: 5px 20px;
+    color: #888;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #444;
+    margin: 10px 0;
+}
+
+.menu-footer {
+    padding: 15px 20px 5px 20px;
+    color: #888;
+    font-size: 12px;
+    text-align: center;
+    border-top: 1px solid #444;
+    margin-top: 10px;
+}
+
 .logo {
     font-size: 24px;
     font-weight: bold;

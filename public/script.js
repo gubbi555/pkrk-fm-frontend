@@ -751,8 +751,26 @@ function switchToKannada() {
     showView('categories');
 }
 
+// Hamburger menu toggle
+function toggleHamburgerMenu() {
+    const dropdown = document.getElementById('hamburgerDropdown');
+    const isVisible = dropdown.style.display === 'block';
+    dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+// Close hamburger menu when clicking outside
+document.addEventListener('click', function(event) {
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+    const dropdown = document.getElementById('hamburgerDropdown');
+    
+    if (dropdown && hamburgerMenu && !hamburgerMenu.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
 // Make search and language functions globally available
 window.performSearch = performSearch;
 window.handleSearchKeypress = handleSearchKeypress;
 window.handleLanguageChange = handleLanguageChange;
 window.switchToKannada = switchToKannada;
+window.toggleHamburgerMenu = toggleHamburgerMenu;

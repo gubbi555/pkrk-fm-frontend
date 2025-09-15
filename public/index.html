@@ -11,6 +11,13 @@
         <!-- Top Navigation Bar -->
         <nav class="top-nav">
             <div class="nav-left">
+                <div class="hamburger-menu" onclick="toggleHamburgerMenu()">
+                    <div class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
                 <div class="logo" onclick="goHome()">PKRK</div>
                 <div class="search-container">
                     <input type="text" placeholder="Search audiobook & stories" class="search-input" id="searchInput" onkeypress="handleSearchKeypress(event)">
@@ -36,6 +43,24 @@
                 <div class="auth-btn">Login / Signup</div>
             </div>
         </nav>
+
+        <!-- Hamburger Menu Dropdown -->
+        <div id="hamburgerDropdown" class="hamburger-dropdown" style="display: none;">
+            <div class="menu-section">
+                <div class="menu-item" onclick="showAuthModal()">Login / Signup</div>
+                <div class="menu-subtitle">For better & personalised experience</div>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item" onclick="showFreeTrialSignup()">Get Free trial</div>
+            <div class="menu-item">For Creators</div>
+            <div class="menu-item">About</div>
+            <div class="menu-item">Legal</div>
+            <div class="menu-item">Help & Support</div>
+            <div class="menu-item">Blog</div>
+            <div class="menu-item">Download PKRK FM app</div>
+            <div class="menu-item">Careers 🚀</div>
+            <div class="menu-footer">Made with ❤️ in India</div>
+        </div>
 
         <header class="header">
             <h1>🎵 PKRK FM</h1>
