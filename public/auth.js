@@ -349,42 +349,29 @@ function showTrialOfferModal() {
             <span class="close-modal" onclick="closeTrialModal()">&times;</span>
             <div class="trial-content">
                 <div class="trial-header">
-                    <h2>🎵 PKRK FM Premium</h2>
                     <div class="trial-badge">
                         <span class="close-trial" onclick="closeTrialModal()">❌</span>
-                        <span class="trial-days">7 Days</span>
-                        <span class="trial-free">FREE</span>
-                        <span class="trial-text">Trial</span>
+                        <span class="trial-days">7 Days FREE</span>
+                        <span class="trial-rating">4.6 ⭐ (1M reviews)</span>
                     </div>
-                </div>
-                
-                <div class="trial-rating">
-                    <span class="rating">4.6 ⭐⭐⭐⭐⭐</span>
-                    <span class="reviews">(1M reviews)</span>
                 </div>
                 
                 <div class="trial-offer">
-                    <h3>Start trial by paying ₹2</h3>
-                    <p class="refund-text">💰 Refunded immediately</p>
-                    <p class="trial-info">Trial Starts, Cancel Anytime</p>
+                    <h3>Start trial - Pay ₹2 (Refunded)</h3>
+                    <p class="trial-info">Cancel Anytime</p>
                 </div>
                 
                 <div class="trial-benefits">
-                    <div class="benefit">🎧 Enjoy 10,000+ shows for free</div>
-                    <div class="benefit">🎵 Unlimited Kannada content</div>
-                    <div class="benefit">📱 Download & listen offline</div>
-                    <div class="benefit">🚫 No ads during playback</div>
+                    <div class="benefit">🎧 10,000+ shows • 🎵 Unlimited content</div>
+                    <div class="benefit">📱 Offline download • 🚫 No ads</div>
                 </div>
                 
                 <div class="trial-pricing">
-                    <div class="autopay-info">
-                        <strong>Autopay ₹499/3 Months</strong>
-                        <p>After 7 days, autopay every 3 Months</p>
-                    </div>
+                    <strong>Then ₹499/3 Months</strong>
                 </div>
                 
                 <button onclick="proceedToSignup()" class="trial-start-btn">Start Free Trial</button>
-                <p class="trial-terms">By continuing, you agree to our Terms & Conditions</p>
+                <p class="trial-terms">Terms & Conditions apply</p>
             </div>
         </div>
     `;

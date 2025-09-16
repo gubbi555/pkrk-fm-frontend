@@ -500,36 +500,30 @@ body {
 
 /* Trial Offer Modal */
 .trial-offer {
-    width: 450px;
+    width: 380px;
     max-width: 95vw;
 }
 
 .trial-content {
     text-align: center;
-    padding: 10px;
-}
-
-.trial-header h2 {
-    color: #e74c3c;
-    font-size: 1.8rem;
-    margin-bottom: 20px;
+    padding: 5px;
 }
 
 .trial-badge {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
-    padding: 15px;
-    border-radius: 15px;
-    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
     color: white;
     position: relative;
 }
 
 .close-trial {
     position: absolute;
-    top: 10px;
-    right: 15px;
+    top: 8px;
+    right: 12px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     opacity: 0.8;
     transition: opacity 0.3s;
 }
@@ -539,99 +533,64 @@ body {
 }
 
 .trial-days {
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: bold;
     display: block;
-}
-
-.trial-free {
-    font-size: 1.5rem;
-    font-weight: bold;
-    display: block;
-}
-
-.trial-text {
-    font-size: 1.2rem;
-    display: block;
+    margin-bottom: 5px;
 }
 
 .trial-rating {
-    margin-bottom: 20px;
-}
-
-.rating {
-    font-size: 1.2rem;
-    color: #ffd700;
-    margin-right: 10px;
-}
-
-.reviews {
-    color: #ccc;
     font-size: 0.9rem;
+    color: #ffd700;
 }
 
 .trial-offer h3 {
     color: #fff;
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-}
-
-.refund-text {
-    color: #4CAF50;
-    font-weight: bold;
-    margin: 5px 0;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
 }
 
 .trial-info {
-    color: #ccc;
-    font-size: 0.9rem;
-    margin-bottom: 20px;
+    color: #4CAF50;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
 }
 
 .trial-benefits {
     background: rgba(255, 255, 255, 0.05);
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 0;
     text-align: left;
 }
 
 .benefit {
     color: #fff;
-    margin: 10px 0;
-    font-size: 1rem;
+    margin: 8px 0;
+    font-size: 0.85rem;
 }
 
 .trial-pricing {
     background: rgba(231, 76, 60, 0.1);
-    padding: 15px;
-    border-radius: 10px;
-    margin: 20px 0;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 15px 0;
     border: 1px solid #e74c3c;
-}
-
-.autopay-info strong {
     color: #e74c3c;
-    font-size: 1.1rem;
-}
-
-.autopay-info p {
-    color: #ccc;
-    font-size: 0.9rem;
-    margin-top: 5px;
+    font-size: 0.95rem;
 }
 
 .trial-start-btn {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: #fff;
-    padding: 15px 30px;
+    padding: 12px 25px;
     border: none;
     border-radius: 25px;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
     width: 100%;
-    margin: 20px 0 10px 0;
+    margin: 15px 0 8px 0;
     transition: transform 0.2s;
 }
 
@@ -641,8 +600,8 @@ body {
 
 .trial-terms {
     color: #888;
-    font-size: 0.8rem;
-    margin-top: 10px;
+    font-size: 0.75rem;
+    margin-top: 5px;
 }
 
 /* About Modal */
