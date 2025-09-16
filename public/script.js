@@ -768,9 +768,88 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// Show About Modal
+function showAboutModal() {
+    const modal = document.createElement('div');
+    modal.className = 'auth-modal';
+    modal.innerHTML = `
+        <div class="auth-modal-content about-modal">
+            <span class="close-modal" onclick="closeAboutModal()">&times;</span>
+            <div class="about-content">
+                <div class="about-header">
+                    <h2>🎵 About PKRK FM</h2>
+                    <p class="about-tagline">Your Ultimate Kannada Audio Streaming Platform</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🎆 Our Mission</h3>
+                    <p>To preserve, promote and celebrate Kannada culture through high-quality audio content, making it accessible to Kannada speakers worldwide.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🎧 What We Offer</h3>
+                    <ul>
+                        <li>🎵 <strong>Film Songs:</strong> Classic and latest Kannada movie soundtracks</li>
+                        <li>📚 <strong>Stories:</strong> Thrilling horror and suspense tales</li>
+                        <li>🎤 <strong>Podcasts:</strong> Engaging discussions and entertainment</li>
+                        <li>🎬 <strong>Web Series:</strong> Original Kannada audio dramas</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>✨ Why Choose PKRK FM?</h3>
+                    <ul>
+                        <li>🔊 High-quality audio streaming</li>
+                        <li>📱 Available on all devices</li>
+                        <li>🌍 Accessible worldwide</li>
+                        <li>🚫 Ad-free premium experience</li>
+                        <li>💾 Offline download capability</li>
+                        <li>🔄 Regular content updates</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>📊 Our Numbers</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">10,000+</span>
+                            <span class="stat-label">Audio Content</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">1M+</span>
+                            <span class="stat-label">Happy Users</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Streaming</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="about-footer">
+                    <p>🇮🇳 <strong>Made with ❤️ in India</strong></p>
+                    <p>Connecting Kannada hearts across the globe</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    // Close hamburger menu
+    document.getElementById('hamburgerDropdown').style.display = 'none';
+}
+
+// Close About Modal
+function closeAboutModal() {
+    const modal = document.querySelector('.auth-modal');
+    if (modal) modal.remove();
+}
+
 // Make search and language functions globally available
 window.performSearch = performSearch;
 window.handleSearchKeypress = handleSearchKeypress;
 window.handleLanguageChange = handleLanguageChange;
 window.switchToKannada = switchToKannada;
 window.toggleHamburgerMenu = toggleHamburgerMenu;
+window.showAboutModal = showAboutModal;
+window.closeAboutModal = closeAboutModal;
